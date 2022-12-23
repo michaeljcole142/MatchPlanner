@@ -139,7 +139,7 @@ public class GSGoogleSheetsExtractor {
 		}
 		return false;
 	}
-	private Bout extractDualMatch(String weight,String wrestlerH, String wrestlerV, String resultCell, String boutScore, String boutTime, String matchName) throws ExcelExtractorException {
+	private Bout extractDualMatch(GSDualMeet d, String weight,String wrestlerH, String wrestlerV, String resultCell, String boutScore, String boutTime, String matchName) throws ExcelExtractorException {
 		Bout theBout = new Bout();
 		theBout.setWeight(weight);
 	
@@ -182,6 +182,7 @@ public class GSGoogleSheetsExtractor {
 			theBout.setResult( WrestlingLanguage.MatchResultType.FALL + "(" + boutTime +  ")");
 			isAWin=true;
 		} else if ( resultCell.equals(GS_WIN_FFT) ) {
+			if ( ! d.getIsHome() ) { return null; }
 			theBout.setMatchResultType(WrestlingLanguage.MatchResultType.FFT);
 			theBout.setResult(WrestlingLanguage.MatchResultType.FFT + "");
 			isAWin=true;
@@ -206,6 +207,7 @@ public class GSGoogleSheetsExtractor {
 			theBout.setResult( WrestlingLanguage.MatchResultType.FALL + "(" + boutTime +  ")");
 			isAWin=false;
 		} else if ( resultCell.equals(GS_LOSS_FFT) ) {
+			if ( d.getIsHome() ) { return null; } 
 			theBout.setMatchResultType(WrestlingLanguage.MatchResultType.FFT);
 			theBout.setResult(WrestlingLanguage.MatchResultType.FFT + "");
 			isAWin=false;
@@ -216,27 +218,26 @@ public class GSGoogleSheetsExtractor {
 		} else {
 			throw new ExcelExtractorException( "Unknown match result type encountered... <" + resultCell + ">",rowNumAt );
 		}
-	
+		if ( ! d.getIsHome() ) {
+			isAWin = ! isAWin;
+		}
 		if ( isAWin ) {
 			theBout.setWin();
 		} else {
 			theBout.setLoss();
 		}
-
-		if ( homeTeam.equals(team) ) {
+		if ( d.getIsHome() ) {
 			theBout.setMainName(wrestler1);
 			theBout.setMainTeam(homeTeam);
 			theBout.setOpponentName(wrestler2);
 			theBout.setOpponentTeam(visitorTeam);
-		} else if (visitorTeam.equals(team) ) {
+		} else {
 			theBout.setMainName(wrestler2);
 			theBout.setMainTeam(visitorTeam);
 			theBout.setOpponentName(wrestler1);
 			theBout.setOpponentTeam(homeTeam);
-		}  else {
-			throw new ExcelExtractorException("ERROR " + team + " not equal to " + homeTeam + " or " + visitorTeam,rowNumAt);
-		}	
-	
+		}  
+		
 		return theBout;
 	}
 	
@@ -253,8 +254,10 @@ public class GSGoogleSheetsExtractor {
 		String visitorTeam = VS.split("vs.")[1].trim();
 		if ( homeTeam.equals(team) ) { 
 			theDual.setOpponent(visitorTeam);
+			theDual.setIsHome();
 		} else {
 			theDual.setOpponent(homeTeam);
+			theDual.setIsAway();
 		}
 		theDual.setEventDate(dt);
 		theDual.setEventTitle(visitorTeam + " Dual");
@@ -299,6 +302,8 @@ public class GSGoogleSheetsExtractor {
 	
        System.out.println("size->" + d.getDualSize());
 	   for ( int i=0; i< d.getDualSize(); i++ ) {
+		   System.out.println("getting->" + rowNumAt + " ->"  + rowCheck);
+
 			List<Object> aRow = resultSheet.get(rowNumAt+rowCheck);
 			String weightCell = aRow.get(0).toString();
 			String wrestlerH = aRow.get(1).toString();
@@ -309,7 +314,9 @@ public class GSGoogleSheetsExtractor {
 			if ( aRow.size() >= 8 ) {
 				boutTime = aRow.get(7).toString();
 			} 
-			Bout b = extractDualMatch(weightCell,wrestlerH, wrestlerV, result,boutScore,boutTime,eventString);
+			System.out.println("Team->" + d.getMainTeam() + " opp->" + d.getOpponent());
+
+			Bout b = extractDualMatch(d,weightCell,wrestlerH, wrestlerV, result,boutScore,boutTime,eventString);
 			if ( b == null ) {
 				verboseMessage("Processed non match row..." );
 			} else {

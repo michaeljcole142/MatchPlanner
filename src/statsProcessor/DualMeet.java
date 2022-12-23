@@ -25,13 +25,20 @@ class DualMeet extends Event {
 
 	public boolean isADualMeet() { return true; }
 	public boolean isATournament() { return false; }
+	public boolean isHome=false;
 	
-	private String[] HSWeightList= {"106","113","120","126","132","138","144","150","157","165","175","190","215","285"};
+	
+	private static String[] HSWeightList= {"106","113","120","126","132","138","144","150","157","165","175","190","215","285"};
 	
 	DualMeet() {
 		//defaults to HS weights.  
 		this.initialize(HSWeightList);
 	}
+	public static String[] getHSWeightList() { return DualMeet.HSWeightList; }
+	
+	public void setIsHome() { this.isHome = true; };
+	public void setIsAway() { this.isHome = false; };
+	public boolean getIsHome() { return this.isHome; };
 	protected void resetWeights() { 
 		this.weights = new ArrayList<String> ();
 	}

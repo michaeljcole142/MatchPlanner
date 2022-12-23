@@ -136,6 +136,8 @@ public class HSGoogleSheetsExtractor {
 	private static String STATES_TOKEN="NJSIAA State Championships";
   
 	private static String SHEET_RESULTS="Results";
+	private static String SHEET_LAST_YEAR_RESULTS="LastYearResults";
+
 	private static String SHEET_WEIGHIN_HISTORY="WeighInHistory";
 	private static String SHEET_ROSTER="Roster";
 	private static String SHEET_LASTYEAR_ROSTER="LastYearRoster";
@@ -601,6 +603,7 @@ System.out.println("mString->" + mString);
 	   if ( ! isABlankRow(blankRow) ) {
 		   checkCell = blankRow.get(0).toString();
 		   if ( checkCell.substring(0,5).equals("Team:") ) {
+			  rowCheck++;
 			  blankRow = resultSheet.get(rowNumAt+rowCheck);
 			  if ( !isABlankRow(blankRow)) {
 				  throw new ExcelExtractorException ("expecting blank row  or Team: at " + (rowNumAt+rowCheck),rowNumAt);
@@ -663,7 +666,7 @@ System.out.println("mString->" + mString);
 		
 	   while ( ! atBlankRow && rowNumAt+rowCheck < resultSheet.size()) {
 		   List<Object> aRow = resultSheet.get(rowNumAt+rowCheck);
-		   if ( aRow == null ) {
+		   if ( aRow == null || aRow.size()==0 ) {
 			   atBlankRow = true;
 			   rowCheck--;
 		   } else if ( aRow.size() == 1 ) {
@@ -1427,7 +1430,7 @@ System.out.println("mString->" + mString);
 			verboseMessage("PROCESSING ROW " + rowNumAt + "...");
 			  
 			List<Object> rowAt = values.get(rowNumAt);
-			if ( rowAt ==  null ) {
+			if ( rowAt.size() == 0 ) {
 				/* Skip null rows */
 				verboseMessage(" null row. ");
 				  
@@ -1548,10 +1551,152 @@ System.out.println("mString->" + mString);
 		theTeam = extractPrestige(theTeam,2);
 	
 		theTeam = extractPrestige(theTeam,3);
+		
+		theTeam = extractLastYearResults(theTeam);
+		
 
 		return theTeam;
 		
 	}
+	
+    public Team extractLastYearResults(Team theTeam) throws Exception {
+		/*
+		 * This is the processing of the sheet that has dual and tourney results for a team on it.
+		 */		   
+		rowNumAt=0;
+		
+		String range = SHEET_LAST_YEAR_RESULTS + "!A:E";
+		
+		ValueRange response = service.spreadsheets().values()
+	                .get(this.getSheetId(), range)
+	                .execute();
+	    List<List<Object>> values = response.getValues();
+		
+		if ( values == null || values.size() == 0 ) {
+			return theTeam;
+		}
+
+		/*
+		 * This while loop will process chunks of the results.  This is why the rowAt is not incremented
+		 * in the main line of a for loop.
+		 */
+		boolean inAnEventFlag = false;   /* this flag tells me if we are processing an event */
+		while ( rowNumAt < values.size() ) {			  
+			verboseMessage("PROCESSING ROW ...");
+			  
+			List<Object> rowAt = values.get(rowNumAt);
+			if ( rowAt.size() == 0 ) {
+				/* Skip empty rows */
+				verboseMessage(" empty row. ");
+				rowNumAt++;
+			} else {
+				/* Check and See if we are at a new event. */
+				if ( inAnEventFlag == false ) {
+                    verboseMessage("InAnEventFlag is false"); 
+					if ( ! firstColOnlyContent(rowAt) ) {
+						if ( garbageRecord(rowAt) ) {
+							verboseMessage("Skipping a garbage record");
+						} else {
+							throw new ExcelExtractorException("Something weird PhysicalNumberOfCells is <" + rowAt.size() + "> expecting 0",rowNumAt);
+						}	
+					} else {
+						String cellZero = rowAt.get(0).toString();
+						if ( isMatchHeaderToken(rowAt) ) {
+							throw new ExcelExtractorException("Something weird",rowNumAt);
+						} else if ( cellZero.startsWith(OFFICIAL_TOKEN) ) {
+							verboseMessage("Skip row, it is a lingering Official row from dual.");
+						} else if ( cellZero.startsWith(WINNING_TEAM_TOKEN) ) {
+							verboseMessage("Skip row, winning team footer.");
+						} else if ( cellZero.startsWith(CLICK_HERE_TOKEN) ) {
+							verboseMessage("Skip row, click here row found.");
+						} else {
+						  /* 
+						   * We are at a new event.  Next step is to see if it is a tournament or a dual.
+						   */
+						  String eventString = cellZero;
+					      verboseMessage(" is a match <" + eventString + ">");
+						  inAnEventFlag = true;
+						  /*
+						   *  Check to see if it is a dual
+						   */
+						   if ( this.isADual(eventString) ) {
+							   verboseMessage(" and dual confirmed. ");
+							   DualMeet d = this.initializeDual(eventString);
+							   rowNumAt++;
+							   /* This code makes sure the next 6 records are of dual format. 
+							    * It will throw an exception if not.
+								*/
+							   this.processDualHeaderRows(values);
+							   
+							   verboseMessage("----- Dual:" + d );
+							   /*
+							    * Now we process the dual itself.
+							    */
+							   int addRow = this.processDualMatches(d,values);
+							   rowNumAt += addRow;
+							   verboseMessage("rowNumAt now " + rowNumAt);
+							   /* look for trailer record. */
+							   rowAt = values.get(rowNumAt);
+							   if (rowAt != null) {
+								   String c = rowAt.get(0).toString();
+								   if ( c.equals(DUAL_FOOTER_USP)) {
+									  verboseMessage("At Unsportsmanlike point");
+									  rowNumAt++;
+									  rowAt=values.get(rowNumAt);
+									  c = rowAt.get(0).toString();
+
+								   }
+								   if ( c.equals(DUAL_FOOTER_TOKEN) ) {
+									   verboseMessage("At Dual Footer row " );
+								   } else {
+									   rowNumAt--;
+								   }
+							   }
+							   theTeam.addLYDualMeet(d);
+							   inAnEventFlag=false;
+						   } 
+						   /*
+						    * If it is not a dual, check to see if it is a tournament.
+						    */
+						    else if ( isATourney(eventString) ) {
+								Tournament t = initializeTourney(eventString);
+								verboseMessage(" and a tourney confirmed. ");
+								 /* This code makes sure the next 6 records are of dual format. 
+							    * It will throw an exception if not.
+								*/
+							   int addRow = this.processTourneyHeaderRows(values);
+							   rowNumAt += addRow; 
+							   verboseMessage("----- Tourney:" + t);
+							    /*
+							    * Now we process the tourney itself.
+							    */
+							   addRow = this.processTourneyMatches(t,values);
+							   rowNumAt += addRow;
+							   verboseMessage("rowNumAt now " + rowNumAt);
+							   theTeam.addLYTournament(t);
+							   inAnEventFlag=false;
+						    }
+						   /* 
+						    * Something went wrong, throw an exception....
+							*/
+							else {
+								throw new ExcelExtractorException("Can't determine if dual or tourney. ",rowNumAt);
+						    }
+						}
+					}	
+					rowNumAt++;
+				} else {   /*here we are already in an event */
+					if ( isMatchHeaderToken(rowAt) ){
+						verboseMessage(" is a match token") ;
+					} else {
+						verboseMessage(" is not a match token");
+				    }
+					rowNumAt++;
+				}
+			}
+		}
+		return theTeam;
+	}	
 	/*
     public static void main(String... args) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.

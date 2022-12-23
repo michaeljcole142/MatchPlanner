@@ -8,7 +8,7 @@ class GSWrestler extends Wrestler {
 	
 	private String seed="";
 	private String cert="";
-	private String jVOrVarsity;
+	private String jVOrVarsity="";
 	
 	
 	public GSWrestler(String n, String team){
@@ -66,15 +66,40 @@ class GSWrestler extends Wrestler {
 	}
 
 	public int getFinWeight() {
+		
+		int certLookup=this.getLowestCertWeight();
+		
+		if ( certLookup > 0 ) { 
+			return certLookup;
+		}
 		int finWeight = 9999;
-	
 		finWeight = Integer.parseInt( this.getLowestWeightWrestled());
 
-		if ( ! seed.equals("") && finWeight != 0 ) {
-			finWeight = Integer.parseInt(seed);
+		if ( finWeight == 9999 ) {
+			if ( ! seed.equals("") ) {
+				finWeight = Integer.parseInt(seed);
+			}
 		}
-	
+		if ( finWeight == 0) { 
+			finWeight=9999; 
+		}
 		return finWeight;
 	}
+	private int getLowestCertWeight() {
+		if ( this.cert.equals("") || this.cert.equals("0")) {
+			return 0;
+		}
+		Double c=Double.parseDouble(this.cert);
+		int[] weights=GSDualMeet.getWeightListInt();
+		
+		for ( var i=0; i < weights.length; i++ ) {
+			Double at = weights[i] + 0.2 ;
+			if ( c <= at ) {
+				return weights[i];
+			}
+		}
+		return weights[weights.length-1];
+	}
+
 
 }

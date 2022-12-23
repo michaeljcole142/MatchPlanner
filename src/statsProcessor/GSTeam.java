@@ -46,6 +46,7 @@ class GSTeam {
 		return lastYearRoster.contains(w);
 	}
 	public void addWrestler(GSWrestler w) {
+		var x = w.getName();
 		theRoster.put(w.getName(),w);
 	}
 	public void addLastYearWrestler(GSWrestler w) {
@@ -75,11 +76,13 @@ class GSTeam {
 
 			  GSWrestler wrestlerAt = theRoster.get(b.getMainName());
 
-			  if ( wrestlerAt == null ) {
-				  GSWrestler newWrestler = new GSWrestler(b.getMainName(),b.getMainTeam());
-				  newWrestler.addBout(b);
-				  theRoster.put(newWrestler.getName(),newWrestler);
-		      } else {
+			  if ( wrestlerAt == null  ) {
+				  if ( b.getMainName().length() > 0 ) {
+					  GSWrestler newWrestler = new GSWrestler(b.getMainName(),b.getMainTeam());
+					  newWrestler.addBout(b);
+					  theRoster.put(newWrestler.getName(),newWrestler);
+				  }
+			  } else {
 				  wrestlerAt.addBout(b);
 			  }
 		  }

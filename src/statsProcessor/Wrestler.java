@@ -16,7 +16,7 @@ class Wrestler {
 	private String trackWtClass;
 	private boolean rosteredLastYear;
 	private String trackLastYearWtClass;
-	private String trackLastYearRecord;
+	private String trackLastYearRecord="";
 	private WrestlingLanguage.Prestige prestigeLastYear;
 	private WrestlingLanguage.Prestige prestige2YearsAgo;
 	private WrestlingLanguage.Prestige prestige3YearsAgo;
@@ -53,7 +53,7 @@ class Wrestler {
 	public String getLossByInjuryString() { return lossByInjuryString; }
 	
 	public String getLowestWeightWrestled() {
-		int lowInt=99999;
+		int lowInt=9999;
 		
 		Set<String> keys = matchesAtWeight.keySet();
 		for (String key: keys ) {
@@ -62,7 +62,13 @@ class Wrestler {
 		    	lowInt = i;
 		    }
 		}
-		return Integer.toString(lowInt);
+		if ( lowInt != 9999 ) {
+			return Integer.toString(lowInt);
+		}
+		if ( this.trackWtClass != null && this.trackWtClass.length() > 0 ) {
+			return this.trackWtClass;
+		}
+		return "9999";
 	}
 	public String getPrintWeight() {
 		if ( forceWeight != null ) {
@@ -86,10 +92,13 @@ class Wrestler {
 	public void setForceRank ( Integer i ) { forceRank = i; }
 	
 	List<Bout> bouts = new ArrayList<Bout> ();
+	List<Bout> lastYearBouts = new ArrayList<Bout> ();
 
 	public List<Bout> getBouts() { return bouts; }
 	
 	public boolean getLossByInjury() { return lossByInjury; }
+
+	public List<Bout> getLastYearBouts() { return this.lastYearBouts;}
 	
 	public WeighInHistory getWeighInHistory() { return wiHistory; }
 	
@@ -109,7 +118,8 @@ class Wrestler {
 			" Gender<" + getGender() + "> Wt<" + 
 			getTrackWtClass() + ">" + " (" + getWins() + "W-" + 
 			getLosses() + "L) Last Year=<" + rosteredLastYear + "> Last Year Record <" + trackLastYearRecord + ">" );
-    }	   
+    }
+  
 	public String getRecordString() { 
 		return String.valueOf(wins) + "-" + String.valueOf(losses); 
 	}
@@ -240,6 +250,10 @@ class Wrestler {
 		addToSummary(b);
 		addToMatchesAtWeight(b);
 	}
+	public void addLYBout(Bout b) {
+		lastYearBouts.add(b);
+	}
+	
 	private void addToMatchesAtWeight(Bout b) {
 		String w=b.getWeight();
 		Integer ct = matchesAtWeight.get(w);

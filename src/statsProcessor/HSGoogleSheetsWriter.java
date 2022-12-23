@@ -15,12 +15,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
-import com.google.api.services.sheets.v4.model.CellFormat;
-import com.google.api.services.sheets.v4.model.CellData;
-import com.google.api.services.sheets.v4.model.Color;
-import com.google.api.services.sheets.v4.model.ExtendedValue;
 import com.google.api.services.sheets.v4.model.*;
 
 import java.io.FileNotFoundException;
@@ -113,7 +107,7 @@ class HSGoogleSheetsWriter  {
 	public void setTeam(String t) { team = t; }
 	
 	public boolean isOverwriteOn() {
-		return overwrite;
+	return overwrite;
 	}
 	
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
@@ -252,286 +246,140 @@ class HSGoogleSheetsWriter  {
 		String atWeightStr="";
 		boolean oddWeight=true;
 		
-		/* Row Borders */
-		Borders rowMidBorders = new Borders();
-		rowMidBorders.setBottom(new Border().setStyle("SOLID"));
-		Borders rowLeftBorders = new Borders();
-		rowLeftBorders.setBottom(new Border().setStyle("SOLID"));
-		rowLeftBorders.setLeft(new Border().setStyle("SOLID_THICK"));
-		Borders rowRightBorders = new Borders();
-		rowRightBorders.setBottom(new Border().setStyle("SOLID"));
-		rowRightBorders.setRight(new Border().setStyle("SOLID_THICK"));
-		
-		Borders nwMidBorders = rowMidBorders.clone(); nwMidBorders.setTop(new Border().setStyle("SOLID_THICK"));
-		Borders nwLeftBorders = rowLeftBorders.clone(); nwLeftBorders.setTop(new Border().setStyle("SOLID_THICK"));
-		Borders nwRightBorders = rowRightBorders.clone(); nwRightBorders.setTop(new Border().setStyle("SOLID_THICK"));
+
 		
 		boolean atNewWeight=true;
-		while ( aw.size() > count ) {
-			Wrestler w = aw.get(count);
-			System.out.println("w=" + w);
-				
-			String wWeight = w.getPrintWeight();
-				
-			if (! wWeight.equals(atWeightStr)) {
-				atNewWeight=true;
-				if ( atWeightStr.length() > 0 ) {
-					if (oddWeight) {
-						oddWeight=false;
-					} else {
-						oddWeight=true;
-					}
-				}
-			}
-			
-			atWeightStr = wWeight;
-			List<CellData> row = new ArrayList<CellData>();			
-
-			CellData weightDataCell = new CellData(); 
-			CellFormat weightDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				weightDataCellFormat.setBorders(nwLeftBorders);
-			} else {
-				weightDataCellFormat.setBorders(rowLeftBorders);
-			}
-			weightDataCell.setUserEnteredFormat(weightDataCellFormat);
-			if ( atNewWeight ) {
-				weightDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(w.getPrintWeight())) ;
-			} else {
-				weightDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(""))  ;
-			}
-			if ( oddWeight) { 
-				weightDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(weightDataCell);
-			
-			CellData nameDataCell = new CellData(); 
-			CellFormat nameDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				nameDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				nameDataCellFormat.setBorders(rowMidBorders);
-			}
-			nameDataCell.setUserEnteredFormat(nameDataCellFormat);
-			if ( oddWeight) { 
-				nameDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(nameDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(w.getName())) ) ;
-				
-			System.out.println("working on " + w.getName());
-
-			WrestlingLanguage.Grade g = w.getGrade();
-			String gg = "NoGrade";
-			if (g != null) { gg = g.toString(); } 
-			CellData gradeDataCell = new CellData(); 
-			CellFormat gradeDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				gradeDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				gradeDataCellFormat.setBorders(rowMidBorders);
-			}
-			gradeDataCell.setUserEnteredFormat(gradeDataCellFormat);
-			if ( oddWeight) { 
-				gradeDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(gradeDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(gg)) ) ;
-
-			CellData recordDataCell = new CellData(); 
-			CellFormat recordDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				recordDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				recordDataCellFormat.setBorders(rowMidBorders);
-			}
-			recordDataCell.setUserEnteredFormat(gradeDataCellFormat);
-			if ( oddWeight) { 
-				recordDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(recordDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(w.getRecordString())) ) ;
-
-			String ss="";
-			if ( w.getRecordBreakdown().length() > 0 ) {
-				ss = w.getRecordBreakdown() + ";" + w.getMatchesAtWeightString();
-			} 
-			CellData sRecordDataCell = new CellData(); 
-			CellFormat sRecordDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				sRecordDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				sRecordDataCellFormat.setBorders(rowMidBorders);
-			}
-			sRecordDataCellFormat.setWrapStrategy("WRAP");	
-			sRecordDataCell.setUserEnteredFormat(sRecordDataCellFormat);
-			if ( oddWeight) { 
-				sRecordDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(sRecordDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(ss)) ) ;
-			
-			String rec=w.getTrackLastYearRecord();
-			if ( rec == null ) {
-				rec="";
-			} 
-			CellData lyRecordDataCell = new CellData(); 
-			CellFormat lyRecordDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				lyRecordDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				lyRecordDataCellFormat.setBorders(rowMidBorders);
-			}
-			lyRecordDataCell.setUserEnteredFormat(lyRecordDataCellFormat);
-			if ( oddWeight) { 
-				lyRecordDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(lyRecordDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(rec)) ) ;
-
-			String pres = "";
-			if ( w.getPrestigeLastYear() != null ) { pres += w.getPrestigeLastYear().toString() + "(LY)"; }
-			if ( w.getPrestige2YearsAgo() != null ) { pres += w.getPrestige2YearsAgo().toString() + "(2YR)"; }
-			if ( w.getPrestige3YearsAgo() != null ) { pres += w.getPrestige3YearsAgo().toString() + "(3YR)"; }
-			CellData prestigeDataCell = new CellData(); 
-			CellFormat prestigeDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				prestigeDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				prestigeDataCellFormat.setBorders(rowMidBorders);
-			}
-			prestigeDataCell.setUserEnteredFormat(prestigeDataCellFormat);
-			if ( oddWeight) { 
-				prestigeDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(prestigeDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(pres)))  ;
-			
-			List<Bout> bouts = w.getBouts();
-			String h2h="";
-			String inj="";
-			String common="";
-			int cSize=0;
-
-			if ( bouts != null ) {
-				for ( int i=0; i < bouts.size(); i++ ) {
-					Bout b = bouts.get(i);
+		String[] hsweights = DualMeet.getHSWeightList();
 		
-					if ( b.getOpponentTeam().equals(homeTeam.getTeamName())) {
-						if ( h2h.length() > 0 ) { h2h += "\n"; }
-						
-						h2h += b.getWinOrLose() + " " + b.getResult() + " " +  b.getOpponentName();
+		for ( int ii=0; ii<hsweights.length; ii++ ) {
+			atNewWeight=true;
+			boolean found = false;
+			if ( ii%2 ==1 ) {
+				oddWeight=true;
+			} else {
+				oddWeight=false;
+			}
+			
+			while ( aw.size() > count ) {
+				Wrestler w = aw.get(count);
+				System.out.println("w=" + w);
+				
+				String wWeight = w.getPrintWeight();
+				
+				if ( wWeight.equals(hsweights[ii])) {
+			
+					atWeightStr = wWeight;
+					String weightData = w.getPrintWeight() ;
+					String nameData=w.getName() ;
+					WrestlingLanguage.Grade gradeData = w.getGrade();
+					String recordData = w.getRecordString() ;
+					String breakdownData = "";
+					if ( w.getRecordBreakdown().length() > 0 ) {
+						breakdownData = w.getRecordBreakdown() + ";" + w.getMatchesAtWeightString();
+					} 
+					String lastYearData=w.getTrackLastYearRecord();
+					if ( lastYearData == null ) {
+						lastYearData="";
 					}
-			
-					String k = b.getOpponentTeam() + ":" + b.getOpponentName();
-			
-					List<Bout> bb = homeTeam.lookupCommonMatch(k);
-			
-					if ( bb != null ) {
-						if  ( bb.size() > 0 ) {
-							cSize += bb.size();
+					String prestigeData = "";
+					if ( w.getPrestigeLastYear() != null ) { prestigeData += w.getPrestigeLastYear().toString() + "(LY)"; }
+					if ( w.getPrestige2YearsAgo() != null ) { prestigeData += w.getPrestige2YearsAgo().toString() + "(2YR)"; }
+					if ( w.getPrestige3YearsAgo() != null ) { prestigeData += w.getPrestige3YearsAgo().toString() + "(3YR)"; }
+	
+					/* create notes. */
+					List<Bout> bouts = w.getBouts();
+					String h2h="";
+					String inj="";
+					String common="";
+					int cSize=0;
+					if ( bouts != null ) {
+						for ( int i=0; i < bouts.size(); i++ ) {
+							Bout b = bouts.get(i);
+
+							if ( b.getOpponentTeam().equals(homeTeam.getTeamName())) {
+								if ( h2h.length() > 0 ) { h2h += "\n"; }
+					
+								h2h += b.getWinOrLose() + " " + b.getResult() + " " +  b.getOpponentName();
+							}
+
+							String k = b.getOpponentTeam() + ":" + b.getOpponentName();
+
+							List<Bout> bb = homeTeam.lookupCommonMatch(k);
+
+							if ( bb != null ) {
+								if  ( bb.size() > 0 ) {
+									cSize += bb.size();
+								}
+							}
+						}
+						if ( cSize > 0 ) { 
+							if ( common.length() > 0 ) { common += "\n"; }
+							common += cSize + " common opponents";
+						}	
+					}
+					String notes="";
+					if ( h2h.length() > 0 ) {
+						if (common.length() > 0 ) {
+							notes = h2h + "\n" + common;
+						} else {
+							notes = h2h;
+						}
+					} else {
+						if ( common.length() > 0 ) {
+							notes = common;
 						}
 					}
-				}
-				if ( cSize > 0 ) { 
-					if ( common.length() > 0 ) { common += "\n"; }
-					common += cSize + " common opponents";
-				}
+					boolean defaultFont=true;
+					if ( w.getLossByInjury() ) {
+						if ( notes.length() > 0 ) {
+							notes = notes + "\n" + w.getLossByInjuryString();
+						} else {
+							notes = w.getLossByInjuryString();
+						}
+						defaultFont=false;
+					}
+
+					String lyN=homeTeam.processLastYearBouts(w.getTeamName(), w.getName());
+					if ( notes.length() > 0 && lyN.length() > 0) {
+						notes +="\n";
+					}
+					notes += lyN;
+					 
+					// END OF NOTES BUILD
+					WeighInHistory wih = w.getWeighInHistory();
+					String iWIStr = "";
+					String lWIDateStr = "";
+					String lWIStr = "";
+
+					if ( wih == null ) {
+						iWIStr="None";
+					} else {
+						iWIStr = String.format(java.util.Locale.US,"%.1f",wih.getInitialWI());
+						lWIDateStr = wih.getLastWIDate();
+						lWIStr = String.format(java.util.Locale.US,"%.1f",wih.getLastWI());
+					}
 					
-			}
-			String notes="";
-			if ( h2h.length() > 0 ) {
-				if (common.length() > 0 ) {
-					notes = h2h + "\n" + common;
+					List<CellData> row = writeRosterRow(atNewWeight, oddWeight, defaultFont,
+							weightData, 
+							nameData, gradeData,recordData, 
+							 breakdownData,  lastYearData,
+							 prestigeData,
+							 notes,  lWIStr,iWIStr,lWIDateStr);	
+					rows.add(new RowData().setValues(row));
+					atNewWeight=false;
+					count ++;
+					found=true;
+					
 				} else {
-					notes = h2h;
-				}
-			} else {
-				if ( common.length() > 0 ) {
-					notes = common;
+					break;
 				}
 			}
-			CellFormat notesDataCellFormat = new CellFormat(); notesDataCellFormat.setWrapStrategy("WRAP");				
-			if ( w.getLossByInjury() ) {
-				if ( notes.length() > 0 ) {
-					notes = notes + "\n" + w.getLossByInjuryString();
-				} else {
-					notes = w.getLossByInjuryString();
-				}
-				// font set to red.
-			    f = new TextFormat();
-			    f.setForegroundColor(redColor);
-			    notesDataCellFormat.setTextFormat(f);
-			} else {
-				//font set to blue.
-			    f = new TextFormat();
-		        f.setForegroundColor(blueColor);
-		        notesDataCellFormat.setTextFormat(f);
+			if ( ! found ) { 
+				//print blank row.
+				List<CellData> row = writeRosterRow(atNewWeight, oddWeight, false,
+						hsweights[ii], "", null,"", "", "", "", "", "","","");
+				rows.add(new RowData().setValues(row));
 			}
-
-			CellData notesDataCell = new CellData(); 
-			if ( atNewWeight) {
-				notesDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				notesDataCellFormat.setBorders(rowMidBorders);
-			}
-			notesDataCell.setUserEnteredFormat(notesDataCellFormat);
-			if ( oddWeight) { 
-				notesDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(notesDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(notes)) ); 
-			
-			WeighInHistory wih = w.getWeighInHistory();
-			String iWIStr = "";
-			String lWIDateStr = "";
-			String lWIStr = "";
-			
-			if ( wih == null ) {
-				iWIStr="None";
-				
-			} else {
-				iWIStr = String.format(java.util.Locale.US,"%.1f",wih.getInitialWI());
-				lWIDateStr = wih.getLastWIDate();
-				lWIStr = String.format(java.util.Locale.US,"%.1f",wih.getLastWI());
-
-			}
-			CellData iWIDataCell = new CellData(); 
-			CellFormat iWIDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				iWIDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				iWIDataCellFormat.setBorders(rowMidBorders);
-			}
-			iWIDataCell.setUserEnteredFormat(iWIDataCellFormat);
-			if ( oddWeight) { 
-				iWIDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(iWIDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(iWIStr)) ) ;
-				
-			CellData lWIDateDataCell = new CellData(); 
-			CellFormat lWIDateDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				lWIDateDataCellFormat.setBorders(nwMidBorders);
-			} else {
-				lWIDateDataCellFormat.setBorders(rowMidBorders);
-			}
-			lWIDateDataCell.setUserEnteredFormat(lWIDateDataCellFormat);
-			if ( oddWeight) { 
-				lWIDateDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(lWIDateDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(lWIDateStr)) ) ;
-				
-			CellData lWIDataCell = new CellData(); 
-			CellFormat lWIDataCellFormat = new CellFormat();
-			if ( atNewWeight) {
-				lWIDataCellFormat.setBorders(nwRightBorders);
-			} else {
-				lWIDataCellFormat.setBorders(rowRightBorders);
-			}
-			lWIDataCell.setUserEnteredFormat(lWIDataCellFormat);
-			if ( oddWeight) { 
-				lWIDataCellFormat.setBackgroundColor(greyColor);
-			}
-			row.add(lWIDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(lWIStr) )) ;
-			
-			rows.add(new RowData().setValues(row));
-
-			atNewWeight=false;
-			count++;			
 		}
 
 		AddSheetRequest addSheet = new AddSheetRequest();
@@ -605,6 +453,211 @@ class HSGoogleSheetsWriter  {
 		
 		return;
 	}
+	
+	private List<CellData> writeRosterRow(Boolean atNewWeight, Boolean oddWeight,Boolean defaultFont,
+			String weightData, 
+			String nameData, WrestlingLanguage.Grade gradeData, String recordData, 
+			String breakdownData, String lastYearData,
+			String prestigeData,
+			String notesData, String lWIStr, String iWIData,String lWIDateStr) {
+
+		/* Row Borders */
+		Borders rowMidBorders = new Borders();
+		rowMidBorders.setBottom(new Border().setStyle("SOLID"));
+		Borders rowLeftBorders = new Borders();
+		rowLeftBorders.setBottom(new Border().setStyle("SOLID"));
+		rowLeftBorders.setLeft(new Border().setStyle("SOLID_THICK"));
+		Borders rowRightBorders = new Borders();
+		rowRightBorders.setBottom(new Border().setStyle("SOLID"));
+		rowRightBorders.setRight(new Border().setStyle("SOLID_THICK"));
+		
+		Borders nwMidBorders = rowMidBorders.clone(); nwMidBorders.setTop(new Border().setStyle("SOLID_THICK"));
+		Borders nwLeftBorders = rowLeftBorders.clone(); nwLeftBorders.setTop(new Border().setStyle("SOLID_THICK"));
+		Borders nwRightBorders = rowRightBorders.clone(); nwRightBorders.setTop(new Border().setStyle("SOLID_THICK"));
+		
+	    TextFormat f = new TextFormat();
+	    f.setFontSize(25);
+	    f.setBold(true);
+	    
+		List<CellData> row = new ArrayList<CellData>();			
+
+		CellData weightDataCell = new CellData(); 
+		CellFormat weightDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			weightDataCellFormat.setBorders(nwLeftBorders);
+		} else {
+			weightDataCellFormat.setBorders(rowLeftBorders);
+		}
+		weightDataCell.setUserEnteredFormat(weightDataCellFormat);
+		if ( atNewWeight ) {
+			weightDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(weightData)) ;
+		} else {
+			weightDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(""))  ;
+		}
+		if ( oddWeight) { 
+			weightDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(weightDataCell);
+
+		CellData nameDataCell = new CellData(); 
+		CellFormat nameDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			nameDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			nameDataCellFormat.setBorders(rowMidBorders);
+		}
+		nameDataCell.setUserEnteredFormat(nameDataCellFormat);
+		if ( oddWeight) { 
+			nameDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(nameDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(nameData)) ) ;
+	
+		System.out.println("working on " + nameData);
+
+		WrestlingLanguage.Grade g = gradeData;
+
+		String gg = "NoGrade";
+		if (g != null) { gg = g.toString(); }
+		if ( nameData.length() == 0 ) { gg=""; }
+		
+		CellData gradeDataCell = new CellData(); 
+		CellFormat gradeDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			gradeDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			gradeDataCellFormat.setBorders(rowMidBorders);
+		}
+		gradeDataCell.setUserEnteredFormat(gradeDataCellFormat);
+		if ( oddWeight) { 
+			gradeDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(gradeDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(gg)) ) ;
+		CellData recordDataCell = new CellData(); 
+		CellFormat recordDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			recordDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			recordDataCellFormat.setBorders(rowMidBorders);
+		}
+		recordDataCell.setUserEnteredFormat(gradeDataCellFormat);
+		if ( oddWeight) { 
+			recordDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(recordDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(recordData)) ) ;
+
+		String ss=breakdownData;
+
+		CellData sRecordDataCell = new CellData(); 
+		CellFormat sRecordDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			sRecordDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			sRecordDataCellFormat.setBorders(rowMidBorders);
+		}
+		sRecordDataCellFormat.setWrapStrategy("WRAP");	
+		sRecordDataCell.setUserEnteredFormat(sRecordDataCellFormat);
+		if ( oddWeight) { 
+			sRecordDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(sRecordDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(ss)) ) ;
+
+		CellData lyRecordDataCell = new CellData(); 
+		CellFormat lyRecordDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			lyRecordDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			lyRecordDataCellFormat.setBorders(rowMidBorders);
+		}
+		lyRecordDataCell.setUserEnteredFormat(lyRecordDataCellFormat);
+		if ( oddWeight) { 
+			lyRecordDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(lyRecordDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(lastYearData)) ) ;
+
+
+		CellData prestigeDataCell = new CellData(); 
+		CellFormat prestigeDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			prestigeDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			prestigeDataCellFormat.setBorders(rowMidBorders);
+		}
+		prestigeDataCell.setUserEnteredFormat(prestigeDataCellFormat);
+		if ( oddWeight) { 
+			prestigeDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(prestigeDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(prestigeData)))  ;
+
+		CellData notesDataCell = new CellData(); 
+		CellFormat notesDataCellFormat = new CellFormat(); notesDataCellFormat.setWrapStrategy("WRAP");				
+
+		if ( defaultFont ) {
+			// font set to red.
+			f = new TextFormat();
+			f.setForegroundColor(blueColor);
+			notesDataCellFormat.setTextFormat(f);
+		} else {
+			
+			//font set to blue.
+			f = new TextFormat();
+			f.setForegroundColor(redColor);
+			notesDataCellFormat.setTextFormat(f);
+		}
+		
+		if ( atNewWeight) {
+			notesDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			notesDataCellFormat.setBorders(rowMidBorders);
+		}
+		notesDataCell.setUserEnteredFormat(notesDataCellFormat);
+		if ( oddWeight) { 
+			notesDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(notesDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(notesData)) ); 
+
+
+		CellData iWIDataCell = new CellData(); 
+		CellFormat iWIDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			iWIDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			iWIDataCellFormat.setBorders(rowMidBorders);
+		}
+		iWIDataCell.setUserEnteredFormat(iWIDataCellFormat);
+		if ( oddWeight) { 
+			iWIDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(iWIDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(iWIData)) ) ;
+	
+		CellData lWIDateDataCell = new CellData(); 
+		CellFormat lWIDateDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			lWIDateDataCellFormat.setBorders(nwMidBorders);
+		} else {
+			lWIDateDataCellFormat.setBorders(rowMidBorders);
+		}
+		lWIDateDataCell.setUserEnteredFormat(lWIDateDataCellFormat);
+		if ( oddWeight) { 
+			lWIDateDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(lWIDateDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(lWIDateStr)) ) ;
+	
+		CellData lWIDataCell = new CellData(); 
+		CellFormat lWIDataCellFormat = new CellFormat();
+		if ( atNewWeight) {
+			lWIDataCellFormat.setBorders(nwRightBorders);
+		} else {
+			lWIDataCellFormat.setBorders(rowRightBorders);
+		}
+		lWIDataCell.setUserEnteredFormat(lWIDataCellFormat);
+		if ( oddWeight) { 
+			lWIDataCellFormat.setBackgroundColor(greyColor);
+		}
+		row.add(lWIDataCell.setUserEnteredValue(new ExtendedValue().setStringValue(lWIStr) )) ;
+		return row;
+	}
+	
+	
 	public void writeVerboseTeam(Team oppTeam,Team homeTeam) throws Exception {
 		
 		/* If GamePlan exists, delete it and start fresh. */

@@ -9,11 +9,16 @@ class Team {
 
     private String teamName;
 	private List<DualMeet> duals = new ArrayList<DualMeet> ();
-    private List<Tournament> tournaments = new ArrayList<Tournament> ();	
+	private List<DualMeet> lastYearDuals = new ArrayList<DualMeet> ();
+
+	private List<Tournament> tournaments = new ArrayList<Tournament> ();
+    private List<Tournament> lastYearTournaments = new ArrayList<Tournament> ();	
 	private List<Tournament> prestigeLastYear = new ArrayList<Tournament> ();
 	private List<Tournament> prestige2YearsAgo = new ArrayList<Tournament>();
 	private List<Tournament> prestige3YearsAgo = new ArrayList<Tournament>();
- 	/*
+	private List<Bout> lastYearBouts = new ArrayList<Bout> ();
+
+	/*
 	 * This roster is key'd on the wrestler's name.
 	 */
 	private Hashtable<String,Wrestler> theRoster = new Hashtable<String, Wrestler> ();
@@ -87,18 +92,59 @@ class Team {
 	public void addTournament(Tournament t) {
 		tournaments.add(t);
         List<Bout> theBouts = t.getBouts();
-	 for ( int i=0; i < theBouts.size() ; i++ ) {
-          Bout b = theBouts.get(i);
-          Wrestler wrestlerAt = theRoster.get(b.getMainName());
-          if ( wrestlerAt == null ) {
-            Wrestler newWrestler = new Wrestler(b.getMainName(),b.getMainTeam());
-			newWrestler.addBout(b);
-			theRoster.put(newWrestler.getName(),newWrestler);
-		  } else {
-            wrestlerAt.addBout(b);
-          }	
+        for ( int i=0; i < theBouts.size() ; i++ ) {
+        	Bout b = theBouts.get(i);
+        	Wrestler wrestlerAt = theRoster.get(b.getMainName());
+        	if ( wrestlerAt == null ) {
+        		Wrestler newWrestler = new Wrestler(b.getMainName(),b.getMainTeam());
+        		newWrestler.addBout(b);
+        		theRoster.put(newWrestler.getName(),newWrestler);
+        	} else {
+        		wrestlerAt.addBout(b);
+        	}	
         }		  
-	}	
+	}
+	public void addLYTournament(Tournament t) {
+		this.lastYearTournaments.add(t);
+        List<Bout> theBouts = t.getBouts();
+        for ( int i=0; i < theBouts.size() ; i++ ) {
+        	Bout b = theBouts.get(i);
+        	Wrestler wrestlerAt = theRoster.get(b.getMainName());
+        	if ( wrestlerAt != null ) {
+        		wrestlerAt.addLYBout(b);
+        	}
+        	this.lastYearBouts.add(b);
+        }		 
+	}
+	public void addLYDualMeet(DualMeet d) {
+		  this.lastYearDuals.add(d);
+		  Hashtable<String,Bout> theBouts = d.getBouts();
+		  Set<String> keys = theBouts.keySet();
+		  for (String key: keys ) {
+	
+			  Bout b = theBouts.get(key);
+
+			  Wrestler wrestlerAt = theRoster.get(b.getMainName());
+
+			  if ( wrestlerAt != null ) {
+				  wrestlerAt.addLYBout(b);
+			  }
+			  this.lastYearBouts.add(b);
+		  }
+	}
+	public String processLastYearBouts(String opponentTeam, String opponentName) {
+		String ret="";
+		for ( int i=0; i < this.lastYearBouts.size(); i++ ) {
+			Bout b = this.lastYearBouts.get(i);
+			if ( b.getOpponentTeam().equals(opponentTeam) && 
+					b.getOpponentName().equals(opponentName)) {
+				System.out.println("LastYearBout->" + b.toString());
+				if (ret.length() > 0 ) { ret +="\n";}
+				ret += "LAST YEAR: " + b.toString();
+			}
+		}
+		return ret;
+	}
 	public void printVerbose() {
 		System.out.println("Team: " + getTeamName() );
 		Set<String> keys = theRoster.keySet();
