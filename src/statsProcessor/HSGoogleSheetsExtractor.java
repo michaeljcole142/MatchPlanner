@@ -839,6 +839,7 @@ System.out.println("mString->" + mString);
 							WeighIn wi = new WeighIn();
 							wi.setWIDate(rowAt.get(1).toString());
 							wi.setWIEvent(rowAt.get(2).toString());
+							
 							String wiString = rowAt.get(3).toString();
 							if ( wiString != null ) {
 								if ( wiString.equals(DNP_TOKEN) ) {
@@ -847,9 +848,11 @@ System.out.println("mString->" + mString);
 									Float wt = Float.valueOf(wiString);
 									wi.setWIWeight(wt);
 								}
-								String ss = rowAt.get(4).toString();
-								if ( ss != null ) {
-									wi.setEntryDateTime(ss);
+								if ( rowAt.size() > 4 ) {
+									String ss = rowAt.get(4).toString();
+									if ( ss != null ) {
+										wi.setEntryDateTime(ss);
+									}
 								}
 								wiHistory.addWI(wi);
 							}
