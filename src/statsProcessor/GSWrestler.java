@@ -44,6 +44,16 @@ class GSWrestler extends Wrestler {
 			return "7";
 		} else if ( this.getGrade() == WrestlingLanguage.Grade.G8 ) {
 			return "8";
+		} else if ( this.getGrade() == WrestlingLanguage.Grade.GK ) {
+			return "0";
+		} else if ( this.getGrade() == WrestlingLanguage.Grade.G1 ) {
+			return "1";
+		} else if ( this.getGrade() == WrestlingLanguage.Grade.G2 ) {
+			return "2";
+		} else if ( this.getGrade() == WrestlingLanguage.Grade.G3 ) {
+			return "3";
+		} else if ( this.getGrade() == WrestlingLanguage.Grade.G4 ) {
+			return "4";
 		}
 		return "";
 	}

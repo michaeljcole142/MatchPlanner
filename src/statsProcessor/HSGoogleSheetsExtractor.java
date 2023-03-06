@@ -784,6 +784,7 @@ System.out.println("mString->" + mString);
 				String header = rowAt.get(0).toString();
 			
 				verboseMessage("Wrestler " + header );
+				int io = header.indexOf(WEIGHIN_TOKEN);
 				String wrestlerName = header.substring(0,header.indexOf(WEIGHIN_TOKEN)-1);
 				wrestlerAt=t.getWrestler(wrestlerName);
 				WeighInHistory wiHistory = new WeighInHistory();

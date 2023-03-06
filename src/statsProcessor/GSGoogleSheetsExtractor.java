@@ -63,6 +63,11 @@ public class GSGoogleSheetsExtractor {
 	private static String Result_NAME_TOKEN="Wrestler (H)";
 
 
+	private static String GRADE_K_TOKEN="K";
+	private static String GRADE_1_TOKEN="1";
+	private static String GRADE_2_TOKEN="2";
+	private static String GRADE_3_TOKEN="3";
+	private static String GRADE_4_TOKEN="4";
 	private static String GRADE_5_TOKEN="5";
 	private static String GRADE_6_TOKEN="6";
 	private static String GRADE_7_TOKEN="7";
@@ -492,6 +497,16 @@ public class GSGoogleSheetsExtractor {
 			return WrestlingLanguage.Grade.G7;
 		} else if ( gs.equals ( GRADE_8_TOKEN ) ) {
 			return WrestlingLanguage.Grade.G8; 
+		} else if ( gs.equals ( GRADE_K_TOKEN ) ) {
+			return WrestlingLanguage.Grade.GK; 
+		} else if ( gs.equals ( GRADE_1_TOKEN ) ) {
+			return WrestlingLanguage.Grade.G1; 
+		} else if ( gs.equals ( GRADE_2_TOKEN ) ) {
+			return WrestlingLanguage.Grade.G2;
+		} else if ( gs.equals ( GRADE_3_TOKEN ) ) {
+			return WrestlingLanguage.Grade.G3;
+		} else if ( gs.equals ( GRADE_4_TOKEN ) ) {
+			return WrestlingLanguage.Grade.G4; 
 		} else {
 			throw new ExcelExtractorException( "Unknown Grade Token found <" + gs + ">", rowNumAt);
 		}
